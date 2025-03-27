@@ -2,9 +2,19 @@ use std::{iter::Peekable, str::Chars};
 use std::str::CharIndices;
 
 pub enum TokenKind {
-    // 
-    Integer(i16),
+    // value
+    Integer(i16),  // 1 2 3 .....
+    String(String),// "hello world"
+    Char(char),    // 'a' 'b' 'c' .....
+    Identifier(String), // variable name
 
+    // keuwords
+    Def,           // def
+    Fun,           // fun
+    Ret,           // ret --> return
+    If,            // if
+    Else,          // else
+    For,           // for
 
     // punctuation
     Plus,          // +
@@ -72,19 +82,6 @@ impl TextSpan {
 
 // #[derive(Debug, Clone, PartialEq)]
 // pub enum Token {
-//     // keywords
-//     Let,
-//     Fn,
-//     If,
-//     Else,
-//     While,
-//     Return,
-
-//     // 
-//     Identifier(String),
-//     Integer(i64),
-//     String(String),
-//     Char(char),
 // }
 
 pub struct Token {
@@ -126,73 +123,65 @@ impl<'a> Lexer<'a> {
 
         let start_pos = self.position;
 
-        let token = match self.ch {
-            // basic char to token
-            '+' => Token::new(TokenKind::Plus, self.span()),
-            '-' => Token::new(TokenKind::Minus, self.span()),
-            '*' => Token::new(TokenKind::Asterisk, self.span()),
-            '/' => Token::new(TokenKind::Slash, self.span()),
-            '%' => Token::new(TokenKind::Percent, self.span()),
-
-            '(' => Token::new(TokenKind::LParen, self.span()),
-            ')' => Token::new(TokenKind::RParen, self.span()),
-            '{' => Token::new(TokenKind::LBrace, self.span()),
-            '}' => Token::new(TokenKind::RBrace, self.span()),
-            '[' => Token::new(TokenKind::LBracket, self.span()),
-            ']' => Token::new(TokenKind::RBracket, self.span()),
-            ';' => Token::new(TokenKind::Semicolon, self.span()),
-            ':' => Token::new(TokenKind::Colon, self.span()),
-            ',' => Token::new(TokenKind::Comma, self.span()),
-
-            // need judge
-            '=' => {
-                if let Some(&'=') = self.peek() {
-                    self.read_char();
-                    Token::new(TokenKind::EqualEqual, self.span())
-                } else {
-                    Token::new(TokenKind::Equal, self.span())
-                }
-            },// ! = how to detect the error and report it? and the way lsp works
-            '!' => {
-                if let Some(&'=') = self.peek() {
-                    self.read_char();
-                    Token::new(TokenKind::BangEqual, self.span())
-                } else {
-                    Token::new(TokenKind::Bang, self.span())
-                    
-                }
-            },
-            '<' => {
-                if let Some(&'=') = self.peek() {
-                    self.read_char();
-                    Token::new(TokenKind::LessEqual, self.span())
-                } else {
-                    Token::new(TokenKind::Less, self.span())
-                }
-            },
-            '>' => {
-                if let Some(&'=') = self.peek() {
-                    self.read_char();
-                    Token::new(TokenKind::GreaterEqual, self.span())
-                } else {
-                    Token::new(TokenKind::Greater, self.span())
-                }
-            },
-
-            '&' => {
-                self.read_char();
-                Token::new(TokenKind::And, self.span())
-            },
-            '|' => {
-                self.read_char();
-                Token::new(TokenKind::Or, self.span())
-            },
-
-            _ => Token::new(TokenKind::EOF, self.span()),
+        let token_kind = if Self::is_num_start(&self.ch) {
+            self.handle_number()
+        } else if Self::is_identifier_start(&self.ch) {
+            self.handle_identifier()
+        } else {
+            match self.ch {
+                '+' => TokenKind::Plus,
+                '-' => TokenKind::Minus,
+                '*' => TokenKind::Asterisk,
+                '/' => TokenKind::Slash,
+                '%' => TokenKind::Percent,
+    
+                '(' => TokenKind::LParen,
+                ')' => TokenKind::RParen,
+                '{' => TokenKind::LBrace,
+                '}' => TokenKind::RBrace,
+                '[' => TokenKind::LBracket,
+                ']' => TokenKind::RBracket,
+                ';' => TokenKind::Semicolon,
+                ':' => TokenKind::Colon,
+                ',' => TokenKind::Comma,
+    
+                '=' => {
+                    self.handle_double_char('=', TokenKind::Equal, TokenKind::EqualEqual)
+                },// ! = how to detect the error and report it? and the way lsp works
+                '!' => {
+                    self.handle_double_char('=', TokenKind::Bang, TokenKind::BangEqual)
+                },
+                '<' => {
+                    self.handle_double_char('=', TokenKind::Less, TokenKind::LessEqual)
+                },
+                '>' => {
+                    self.handle_double_char('=', TokenKind::Greater, TokenKind::GreaterEqual)
+                },
+    
+                '&' => {
+                    self.consume_char();
+                    TokenKind::And
+                },
+                '|' => {
+                    self.consume_char();
+                    TokenKind::Or
+                },
+    
+                _ => TokenKind::EOF,
+            }
         };
 
+        // 复习一下 索引 字符 和 字节 
         // generate the token, determine the exact start and end position of the token
-        
+        let end_pos = self.position;
+        let a = self.input
+            .clone()
+            .enumerate()
+            .filter(|(i,_)| *i >= start_pos && *i < end_pos)
+            .map(|(_, ch)| ch)
+            .collect::<String>();
+        let span = TextSpan::new(start_pos, end_pos, a);
+        let token = Token::new(token_kind, span);
         Some(token)
     }
 
@@ -211,24 +200,46 @@ impl<'a> Lexer<'a> {
     }
 
     // consume the char
-    fn read_char(&mut self) {
+    fn consume_char(&mut self) {
         self.ch = self.input.next().unwrap_or('\0');
 
         self.position = self.read_position; 
         self.read_position += 1;
     }
 
-    fn read_identifier() {
-        todo!()
+    fn handle_identifier(&mut self) -> TokenKind {
+        let mut token_value = String::from(self.ch);
+        while let Some(&ch) = self.input.peek() {
+            if Self::is_identifier_start(&ch) {
+                token_value.push(ch);
+                self.consume_char();
+            } else {
+                break;
+            }
+        }
+        match token_value.as_str() {
+            "def" => TokenKind::Def,
+            "fun" => TokenKind::Fun,
+            "ret" => TokenKind::Ret,
+            "if" => TokenKind::If,
+            "else" => TokenKind::Else,
+            "for" => TokenKind::For,
+            _ => TokenKind::Identifier(token_value),
+        }
     }
 
-    fn read_number() {
-        todo!()
-    }
-
-    // bug here. it can not be give value
-    fn span(&self) -> TextSpan {
-        TextSpan::new(self.position, self.read_position, self.ch.to_string())
+    fn handle_number(&mut self) -> TokenKind {
+        let mut token_value = String::from(self.ch);
+        while let Some(&ch) = self.input.peek() {
+            if ch.is_digit(10) {
+                token_value.push(ch);
+                self.consume_char();
+            } else {
+                break;
+            }
+        }
+        let value = token_value.parse::<i16>().unwrap();
+        TokenKind::Integer(value)
     }
 
     fn is_at_end(&mut self) -> bool {
@@ -245,6 +256,17 @@ impl<'a> Lexer<'a> {
         ch.is_alphabetic() || *ch == '_'
     }
 
-
-    
+    fn handle_double_char(&mut self, pun: char, single: TokenKind, double: TokenKind) -> TokenKind {
+        if let Some(&ch) = self.peek() {
+            if ch == pun {
+                self.consume_char();
+                double
+            } else {
+                single
+            }
+        } else {
+            single
+        }
+        
+    }
 }
