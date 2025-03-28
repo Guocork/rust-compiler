@@ -1,11 +1,11 @@
-use std::{iter::Peekable, str::Chars};
-use std::str::CharIndices;
+use std::{fmt::Display, iter::Peekable, str::Chars};
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     // value
     Integer(i16),  // 1 2 3 .....
-    String(String),// "hello world"
-    Char(char),    // 'a' 'b' 'c' .....
+    // String(String),// "hello world"
+    // Char(char),    // 'a' 'b' 'c' .....
     Identifier(String), // variable name
 
     // keuwords
@@ -51,8 +51,49 @@ pub enum TokenKind {
     EOF,
 }
 
+impl Display for TokenKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenKind::Integer(value) => write!(f, "Integer({})", value),
+            TokenKind::Identifier(value) => write!(f, "Identifier({})", value),
+            TokenKind::Def => write!(f, "Def"),
+            TokenKind::Fun => write!(f, "Fun"),
+            TokenKind::Ret => write!(f, "Ret"),
+            TokenKind::If => write!(f, "If"),
+            TokenKind::Else => write!(f, "Else"),
+            TokenKind::For => write!(f, "For"),
+            TokenKind::Plus => write!(f, "Plus"),
+            TokenKind::Minus => write!(f, "Minus"),
+            TokenKind::Asterisk => write!(f, "Asterisk"),
+            TokenKind::Slash => write!(f, "Slash"),
+            TokenKind::Percent => write!(f, "Percent"), 
+            TokenKind::LParen => write!(f, "LParen"),
+            TokenKind::RParen => write!(f, "RParen"),
+            TokenKind::LBrace => write!(f, "LBrace"),
+            TokenKind::RBrace => write!(f, "RBrace"),
+            TokenKind::LBracket => write!(f, "LBracket"),
+            TokenKind::RBracket => write!(f, "RBracket"),
+            TokenKind::Semicolon => write!(f, "Semicolon"),
+            TokenKind::Colon => write!(f, "Colon"),
+            TokenKind::Comma => write!(f, "Comma"),
+            TokenKind::Equal => write!(f, "Equal"),
+            TokenKind::EqualEqual => write!(f, "EqualEqual"),
+            TokenKind::Bang => write!(f, "Bang"),
+            TokenKind::BangEqual => write!(f, "BangEqual"),
+            TokenKind::Less => write!(f, "Less"),
+            TokenKind::LessEqual => write!(f, "LessEqual"),
+            TokenKind::Greater => write!(f, "Greater"),
+            TokenKind::GreaterEqual => write!(f, "GreaterEqual"),
+            TokenKind::And => write!(f, "And"),
+            TokenKind::Or => write!(f, "Or"),
+            TokenKind::EOF => write!(f, "EOF"),
+        }
+    }
+}
+
 // locate the position of the token
 // highlights and tips in lsp
+#[derive(Debug, Clone, PartialEq)]
 pub struct TextSpan {
     start: usize,
     end: usize,
@@ -80,12 +121,9 @@ impl TextSpan {
     
 }
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum Token {
-// }
-
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
-    kind: TokenKind,
+    pub kind: TokenKind,
     span: TextSpan,
 }
 
@@ -119,7 +157,11 @@ impl<'a> Lexer<'a> {
 
     // the core of the lexer
     pub fn next_token(&mut self) -> Option<Token> {
+
         self.skip_whitespace();
+        let orinial_str = self.input.clone().collect::<String>();
+        self.consume_char();
+
 
         let start_pos = self.position;
 
@@ -171,16 +213,15 @@ impl<'a> Lexer<'a> {
             }
         };
 
-        // 复习一下 索引 字符 和 字节 
         // generate the token, determine the exact start and end position of the token
         let end_pos = self.position;
-        let a = self.input
-            .clone()
+        let a = orinial_str
+            .chars()
             .enumerate()
-            .filter(|(i,_)| *i >= start_pos && *i < end_pos)
+            .filter(|(i,_)| *i >= start_pos && *i <= end_pos)
             .map(|(_, ch)| ch)
             .collect::<String>();
-        let span = TextSpan::new(start_pos, end_pos, a);
+        let span = TextSpan::new(start_pos, end_pos, self.ch.to_string());
         let token = Token::new(token_kind, span);
         Some(token)
     }
@@ -267,6 +308,5 @@ impl<'a> Lexer<'a> {
         } else {
             single
         }
-        
     }
 }

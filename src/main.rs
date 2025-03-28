@@ -5,6 +5,8 @@ mod lexer;
 // mod codegen;
 // mod vm;
 
+use lexer::{Lexer, TokenKind};
+
 
 // test for lexer
 enum Errors {
@@ -42,19 +44,19 @@ impl Text {
     
 }
 
-#[derive(Debug, Clone)]
-enum TokenType {
-    SemoColon,
-    Identifier,
-    Equal
-}
+// #[derive(Debug, Clone)]
+// enum TokenType {
+//     SemoColon,
+//     Identifier,
+//     Equal
+// }
 
 
-#[derive(Debug, Clone)]
-struct Token {
-    pub ty: TokenType,
-    pub value: String
-}
+// #[derive(Debug, Clone)]
+// struct Token {
+//     pub ty: TokenType,
+//     pub value: String
+// }
 
 
 // fn tokenize(code: &str) -> Result<Vec<Token>, Errors> {
@@ -103,6 +105,25 @@ struct Token {
 
 fn main() {
     // tokenize("x = 2;");
-    let a = '2'.is_alphabetic();
-    println!("{}", a);
+    // let a = '2'.is_alphabetic();
+    // println!("{}", a);
+    let input = "
+        let x = 5;
+        let y = 10;
+        if (x < y) {
+            return true;
+        } else {
+            return false;
+        }
+    ";
+
+
+    let mut lexer = Lexer::new(input);
+    loop {
+        let token = lexer.next_token().unwrap();
+        println!("{:?}", token);
+        if token.kind == TokenKind::EOF {
+            break;
+        }
+    }
 }
