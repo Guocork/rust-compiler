@@ -108,6 +108,7 @@ fn main() {
     // let a = '2'.is_alphabetic();
     // println!("{}", a);
     let input = "
+        def a = 5;
         let x = 5;
         let y = 10;
         if (x < y) {

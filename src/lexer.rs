@@ -110,12 +110,12 @@ impl TextSpan {
     }
 
     // caculate the length of the span
-    pub fn length(&self) -> usize {
+    pub fn _length(&self) -> usize {
         self.end - self.start
     }
 
     // judge if the position is in the span
-    pub fn contains(&self, pos: usize) -> bool {
+    pub fn _contains(&self, pos: usize) -> bool {
         pos >= self.start && pos < self.end
     }
     
@@ -165,57 +165,61 @@ impl<'a> Lexer<'a> {
 
         let start_pos = self.position;
 
-        let token_kind = if Self::is_num_start(&self.ch) {
-            self.handle_number()
+        if Self::is_num_start(&self.ch) {
+            let num = self.read_number();
+            let token_kind = Self::handle_number(num.clone());
+            return Some(Token::new(token_kind, TextSpan::new(start_pos, self.position, num.to_string())));
         } else if Self::is_identifier_start(&self.ch) {
-            self.handle_identifier()
-        } else {
-            match self.ch {
-                '+' => TokenKind::Plus,
-                '-' => TokenKind::Minus,
-                '*' => TokenKind::Asterisk,
-                '/' => TokenKind::Slash,
-                '%' => TokenKind::Percent,
-    
-                '(' => TokenKind::LParen,
-                ')' => TokenKind::RParen,
-                '{' => TokenKind::LBrace,
-                '}' => TokenKind::RBrace,
-                '[' => TokenKind::LBracket,
-                ']' => TokenKind::RBracket,
-                ';' => TokenKind::Semicolon,
-                ':' => TokenKind::Colon,
-                ',' => TokenKind::Comma,
-    
-                '=' => {
-                    self.handle_double_char('=', TokenKind::Equal, TokenKind::EqualEqual)
-                },// ! = how to detect the error and report it? and the way lsp works
-                '!' => {
-                    self.handle_double_char('=', TokenKind::Bang, TokenKind::BangEqual)
-                },
-                '<' => {
-                    self.handle_double_char('=', TokenKind::Less, TokenKind::LessEqual)
-                },
-                '>' => {
-                    self.handle_double_char('=', TokenKind::Greater, TokenKind::GreaterEqual)
-                },
-    
-                '&' => {
-                    self.consume_char();
-                    TokenKind::And
-                },
-                '|' => {
-                    self.consume_char();
-                    TokenKind::Or
-                },
-    
-                _ => TokenKind::EOF,
-            }
+            let iden = self.read_identifier();
+            let token_kind = Self::handle_identifier(iden.clone());
+            return Some(Token::new(token_kind, TextSpan::new(start_pos, self.position, iden)));
+        }
+
+        let token_kind = match self.ch {
+            '+' => TokenKind::Plus,
+            '-' => TokenKind::Minus,
+            '*' => TokenKind::Asterisk,
+            '/' => TokenKind::Slash,
+            '%' => TokenKind::Percent,
+
+            '(' => TokenKind::LParen,
+            ')' => TokenKind::RParen,
+            '{' => TokenKind::LBrace,
+            '}' => TokenKind::RBrace,
+            '[' => TokenKind::LBracket,
+            ']' => TokenKind::RBracket,
+            ';' => TokenKind::Semicolon,
+            ':' => TokenKind::Colon,
+            ',' => TokenKind::Comma,
+
+            '=' => {
+                self.handle_double_char('=', TokenKind::Equal, TokenKind::EqualEqual)
+            },// ! = how to detect the error and report it? and the way lsp works
+            '!' => {
+                self.handle_double_char('=', TokenKind::Bang, TokenKind::BangEqual)
+            },
+            '<' => {
+                self.handle_double_char('=', TokenKind::Less, TokenKind::LessEqual)
+            },
+            '>' => {
+                self.handle_double_char('=', TokenKind::Greater, TokenKind::GreaterEqual)
+            },
+
+            '&' => {
+                self.consume_char();
+                TokenKind::And
+            },
+            '|' => {
+                self.consume_char();
+                TokenKind::Or
+            },
+
+            _ => TokenKind::EOF,
         };
 
         // generate the token, determine the exact start and end position of the token
         let end_pos = self.position;
-        let a = orinial_str
+        let _a = orinial_str
             .chars()
             .enumerate()
             .filter(|(i,_)| *i >= start_pos && *i <= end_pos)
@@ -229,7 +233,7 @@ impl<'a> Lexer<'a> {
     fn skip_whitespace(&mut self) {
         while let Some(&ch) = self.input.peek() {
             if ch.is_whitespace() {
-                self.input.next();
+                self.consume_char();
             } else {
                 break;
             }
@@ -248,7 +252,7 @@ impl<'a> Lexer<'a> {
         self.read_position += 1;
     }
 
-    fn handle_identifier(&mut self) -> TokenKind {
+    fn read_identifier(&mut self) -> String {
         let mut token_value = String::from(self.ch);
         while let Some(&ch) = self.input.peek() {
             if Self::is_identifier_start(&ch) {
@@ -258,18 +262,24 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        match token_value.as_str() {
+
+        token_value
+    }
+
+    fn handle_identifier(iden: String) -> TokenKind {
+        match iden.as_str() {
             "def" => TokenKind::Def,
             "fun" => TokenKind::Fun,
             "ret" => TokenKind::Ret,
             "if" => TokenKind::If,
             "else" => TokenKind::Else,
             "for" => TokenKind::For,
-            _ => TokenKind::Identifier(token_value),
+            _ => TokenKind::Identifier(iden),
         }
     }
+    
 
-    fn handle_number(&mut self) -> TokenKind {
+    fn read_number(&mut self) -> String {
         let mut token_value = String::from(self.ch);
         while let Some(&ch) = self.input.peek() {
             if ch.is_digit(10) {
@@ -279,11 +289,15 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        let value = token_value.parse::<i16>().unwrap();
+        token_value
+    }
+
+    fn handle_number(num: String) -> TokenKind {
+        let value = num.parse::<i16>().unwrap();
         TokenKind::Integer(value)
     }
 
-    fn is_at_end(&mut self) -> bool {
+    fn _is_at_end(&mut self) -> bool {
         // self.read_position >= self.input.clone().count()
         self.input.peek().is_none()
     }
