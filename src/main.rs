@@ -1,7 +1,7 @@
 
 mod lexer;
 // mod parser;
-// mod ast;
+mod ast;
 // mod codegen;
 // mod vm;
 
@@ -9,7 +9,7 @@ use lexer::{Lexer, TokenKind};
 
 
 // test for lexer
-enum Errors {
+enum _Errors {
     
 }
 
@@ -19,21 +19,21 @@ struct Text {
 }
 
 impl Text {
-    fn new(value: String) -> Self {
+    fn _new(value: String) -> Self {
         Self {
             value,
             age: 0
         }
     }
 
-    fn test(&self) {
+    fn _test(&self) {
         println!("{}", self.value);
         let a = self.age;
 
 
     }
 
-    fn test_mut(&mut self) {
+    fn _test_mut(&mut self) {
         self.value = String::from("Hello");
         self.age += 1;
         let age_ref = &mut self.age;
