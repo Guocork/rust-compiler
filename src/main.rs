@@ -5,6 +5,7 @@ mod ast;
 // mod codegen;
 // mod vm;
 mod visitor;
+mod evaluator;
 
 use lexer::{Lexer, TokenKind};
 
