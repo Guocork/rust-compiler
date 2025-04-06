@@ -324,3 +324,43 @@ impl<'a> Lexer<'a> {
         }
     }
 }
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lexer1() {
+        let input = "def fun ret if else for + - * / % ( ) { } [ ] ; : , = == ! != < <= > >= && ||";
+        let mut lexer = Lexer::new(input);
+        while let Some(token) = lexer.next_token() {
+            println!("{:?}", token);
+        }
+    }
+
+    #[test]
+    fn test_lexer2() {
+        let input = "
+        def a = 5;
+        let x = 5;
+        let y = 10;
+        if (x < y) {
+            return true;
+        } else {
+            return false;
+        }
+    ";
+
+        let mut lexer = Lexer::new(input);
+        loop {
+            let token = lexer.next_token().unwrap();
+            println!("{:?}", token);
+            if token.kind == TokenKind::EOF {
+                break;
+            }
+        }
+    }
+}

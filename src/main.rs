@@ -159,26 +159,6 @@ fn main() {
     // tokenize("x = 2;");
     // let a = '2'.is_alphabetic();
     // println!("{}", a);
-    let input = "
-        def a = 5;
-        let x = 5;
-        let y = 10;
-        if (x < y) {
-            return true;
-        } else {
-            return false;
-        }
-    ";
-
-
-    let mut lexer = Lexer::new(input);
-    loop {
-        let token = lexer.next_token().unwrap();
-        println!("{:?}", token);
-        if token.kind == TokenKind::EOF {
-            break;
-        }
-    }
 
     // let a = Box::new(BoxedPerson(Employee { person: Person {} }));
     // a.work();
