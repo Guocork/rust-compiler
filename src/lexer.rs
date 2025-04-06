@@ -93,7 +93,7 @@ impl Display for TokenKind {
 
 // locate the position of the token
 // highlights and tips in lsp
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TextSpan {
     start: usize,
     end: usize,
@@ -124,7 +124,7 @@ impl TextSpan {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub kind: TokenKind,
-    span: TextSpan,
+    pub span: TextSpan,
 }
 
 impl Token {

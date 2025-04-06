@@ -1,11 +1,13 @@
 
 mod lexer;
-// mod parser;
+mod parser;
 mod ast;
 // mod codegen;
 // mod vm;
 mod visitor;
 mod evaluator;
+
+use std::{cell::RefCell, f32::consts::E, ops::{Deref, DerefMut}, rc::Rc};
 
 use lexer::{Lexer, TokenKind};
 
@@ -103,6 +105,54 @@ impl Text {
 //     Ok(tokens)
 // }
 
+// 自动解引用只能用于方法调用 不能用于字段访问
+struct Person {
+    name: String
+}
+
+impl Person {
+    fn work(&self) {
+        println!("working");
+    }
+
+    fn set_name(&mut self, new_name: &str) {
+        self.name = new_name.to_string();
+    }
+}
+
+struct Employee {
+    person: Person,
+}
+
+impl Deref for Employee {
+    type Target = Person;
+
+    fn deref(&self) -> &Self::Target {
+        &self.person
+    }
+}
+
+impl DerefMut for Employee {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.person
+    }
+}
+
+struct BoxedPerson(Employee);
+
+impl Deref for BoxedPerson {
+    type Target = Employee;
+    
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BoxedPerson {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 
 fn main() {
@@ -129,4 +179,7 @@ fn main() {
             break;
         }
     }
+
+    // let a = Box::new(BoxedPerson(Employee { person: Person {} }));
+    // a.work();
 }
