@@ -47,8 +47,13 @@ impl<'a> Parser<'a> {
         
     }
 
+    // consume
     pub fn eat(&mut self) {
-        
+        self.consume_char();
+    }
+
+    pub fn current_token(&self) -> &Token {
+        &self.current_token
     }
 
     pub fn advance(&mut self) {
@@ -95,7 +100,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // fn parse_expression(&mut self) -> Option<Expression> {
+    fn parse_expression(&mut self) -> Option<Expression> {
         
-    // }
+    }
 }

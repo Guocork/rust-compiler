@@ -240,12 +240,12 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn peek(&mut self) -> Option<&char> {
+    pub fn peek(&mut self) -> Option<&char> {
         self.input.peek()
     }
 
     // consume the char
-    fn consume_char(&mut self) {
+    pub fn consume_char(&mut self) {
         self.ch = self.input.next().unwrap_or('\0');
 
         self.position = self.read_position; 
