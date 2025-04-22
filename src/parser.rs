@@ -43,8 +43,8 @@ impl<'a> Parser<'a> {
         parser
     }
 
-    pub fn peek(&mut self) {
-        
+    pub fn look(&mut self) -> Option<&char> {
+        self.peek()
     }
 
     // consume
@@ -65,8 +65,18 @@ impl<'a> Parser<'a> {
         });
     }
 
-    pub fn parse_program(&mut self) {
-        
+    // the start of the parser
+    pub fn parse_program(&mut self) -> Vec<Statement> {
+        let mut statements = Vec::new();
+
+        while self.current_token.kind != TokenKind::EOF {
+            if let Some(statement) = self.parse_statement() {
+                statements.push(statement);
+            }
+            self.advance();
+        }
+
+        statements
     }
 
     pub fn parse_return_statement(&mut self) -> Option<Statement> {

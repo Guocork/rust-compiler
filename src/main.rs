@@ -1,11 +1,11 @@
 
 mod lexer;
-mod parser;
+// mod parser;
 mod ast;
 // mod codegen;
 // mod vm;
 mod visitor;
-mod evaluator;
+// mod evaluator;
 
 use std::{cell::RefCell, f32::consts::E, ops::{Deref, DerefMut}, rc::Rc};
 

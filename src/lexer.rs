@@ -345,12 +345,12 @@ mod tests {
     fn test_lexer2() {
         let input = "
         def a = 5;
-        let x = 5;
-        let y = 10;
+        def x = 5;
+        def y = 10;
         if (x < y) {
-            return true;
+            ret true;
         } else {
-            return false;
+            ret false;
         }
     ";
 
